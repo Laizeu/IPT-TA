@@ -13,6 +13,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from singletons.logger_singleton import LoggerSingleton
 from rest_framework import permissions
+from rest_framework import permissions
+
 
 # For Google OAuth
 from dj_rest_auth.registration.views import SocialLoginView
@@ -101,6 +103,23 @@ def upload_to_google_drive(file_obj, username):
     ).execute()
 
     return f"https://drive.google.com/file/d/{file['id']}/view"
+
+# ------------------- Permissions -----------------------
+
+class IsAuthorOrAdmin(permissions.BasePermission):
+    """
+    Only the post author or admin/staff can delete/update the post.
+    Only author/admin can view private posts.
+    """
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            # Private posts: only author or admin can view
+            if obj.privacy == "private":
+                return obj.author == request.user or request.user.is_staff or request.user.is_superuser
+            return True  # public posts are visible to all authenticated users
+
+        # Modifying or deleting posts: only author or admin
+        return obj.author == user or user.is_staff or user.is_superuser
 
 # ------------------- USER VIEWS -----------------------
 class UserCreateView(generics.CreateAPIView):
@@ -225,7 +244,7 @@ class PostListCreate(generics.ListCreateAPIView):
             logger.info(f"Cache hit: Returning cached posts for user {user_id} page {page_number}.")
             return Response(cached_data, status=status.HTTP_200_OK, headers={'X-Cache': 'HIT'})
 
-        # Cache miss → fetch from DB
+    # Cache miss → fetch from DB
         logger.info(f"Cache miss: Fetching posts for user {user_id} page {page_number}.")
         response = super().list(request, *args, **kwargs)
         cache.set(cache_key, response.data, CACHE_TIMEOUT)
@@ -288,7 +307,7 @@ class PostRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     # ✅ Only owner or admin can edit/delete; others can read public posts
-    permission_classes = [IsOwnerOrAdmin]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
 
     def get_object(self):
         post_id = self.kwargs["pk"]
@@ -299,10 +318,6 @@ class PostRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
             raise exceptions.NotAuthenticated(
                 detail="Authentication credentials were not provided."
             )
-
-        # Privacy enforcement: private posts visible only to author
-        if post.privacy == 'private' and post.author != self.request.user:
-            raise serializers.ValidationError("You are not authorized to view this private post.")
 
         self.check_object_permissions(self.request, post)
         return post
@@ -349,7 +364,6 @@ class PostRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
                 else:
                     break
                 page += 1
-
 
 # -------------------- COMMENT VIEWS --------------------
 class CommentListCreate(generics.ListCreateAPIView):

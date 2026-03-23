@@ -16,8 +16,9 @@ class IsOwnerOrAdmin(permissions.BasePermission):
     Custom permission to allow owners of an object or admins to edit or delete it.
     """
     def has_object_permission(self, request, view, obj):
-        # Safe methods are always allowed
         if request.method in permissions.SAFE_METHODS:
+            if obj.privacy == "private":
+                return obj.author == request.user or request.user.is_staff or request.user.is_superuser
             return True
         
         # Allow if the user is the author
