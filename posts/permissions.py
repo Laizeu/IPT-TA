@@ -25,10 +25,11 @@ class IsOwnerOrAdmin(permissions.BasePermission):
         if hasattr(obj, "author") and obj.author == request.user:
             return True
         
-        # Allow if the user has admin role OR is Django staff/superuser
+        # Allow if the user has admin role
         if getattr(request.user, "role", "user") == "admin":
             return True
         
+        #Allow if the user is Django staff/superuser
         if request.user.is_staff or request.user.is_superuser:
             return True
         
