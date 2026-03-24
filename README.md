@@ -163,15 +163,19 @@ Testing Tool
 ```
 Sample Request Body
 ```json
-{"username":"laizallanto","email":"laiza@gmail.com"}
+{
+  "username": "laizallanto",
+  "email": "laiza@email.com",
+  "password": "laiza123!"
+}
 ```
 Sample Response
 ```json
-
 {
-  "id": 1,
-  "username": "laiza",
-  "email": "laiza@example.com"
+    "id": 1,
+    "username": "Laiza",
+    "email": "laiza@email.com",
+    "is_staff": true
 }
 ```
 ### Posts
@@ -183,14 +187,29 @@ Sample Response
 ```
 Sample Request Body
 ```json
-{"content":"Hello this is Laiza's first post!","author":1}
+{
+  "title": "This is Laiza and this is my private post",
+  "content": "This post is from User A.",
+  "post_type": "text",
+  "privacy": "private"
+}
 ```
 Sample Response
 ```json
 {
-  "id": 1,
-  "content": "Hello this is Laiza's first post!",
-  "author": 1
+    "id": 48,
+    "title": "This is Laiza and this is my private post",
+    "content": "This post is from User A.",
+    "post_type": "text",
+    "metadata": {},
+    "image": null,
+    "video": null,
+    "author": "Laiza",
+    "created_at": "2026-03-22T14:08:00.418342Z",
+    "comments": [],
+    "like_count": 0,
+    "comment_count": 0,
+    "privacy": "private"
 }
 ```
 ### Likes
@@ -211,18 +230,24 @@ Sample Response
 Sample Request Body
 ```json
 {
-  "text": "This is a comment by Laiza",
-  "author": 1,
-  "post": 1
+  "id": 12,
+  "content": "This is comment by User A.",
+  "comment_type": "text"
 }
 ```
 Sample Response
 ```json
 {
-  "id": 1,
-  "text": "This is a comment by Laiza",
-  "author": 1,
-  "post": 1
+    "id": 1,
+    "content": "This is comment by User A",
+    "comment_type": "text",
+    "metadata": {},
+    "image": null,
+    "video": null,
+    "author": "Laiza",
+    "post": 12,
+    "created_at": "2026-03-19T14:01:47.897324Z",
+    "like_count": 0
 }
 ```
 ### Authentication
@@ -266,19 +291,26 @@ Returns a paginated list of posts ordered by newest first.
 Example Feed Response
 ```json
 {
-  "count": 5,
-  "next": "http://127.0.0.1:8000/posts/feed/?page=2",
-  "previous": null,
-  "results": [
-    {
-      "id": 7,
-      "content": "Hello this is Laiza's first post!",
-      "author": "laiza",
-      "created_at": "2026-03-05T10:30:00Z",
-      "like_count": 2,
-      "comment_count": 1
-    }
-  ]
+    "count": 17,
+    "next": "http://127.0.0.1:8000/posts/?page=2",
+    "previous": null,
+    "results": [
+        {
+            "id": 48,
+            "title": "This is Adrian and this is my public post",
+            "content": "This post is from User A.",
+            "post_type": "text",
+            "metadata": {},
+            "image": null,
+            "video": null,
+            "author": "adriansanjuan",
+            "created_at": "2026-03-22T14:08:00.418342Z",
+            "comments": [],
+            "like_count": 0,
+            "comment_count": 0,
+            "privacy": "public"
+        }
+    ]
 }
 ```
 ### Access Control Example
